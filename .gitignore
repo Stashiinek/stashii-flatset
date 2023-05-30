@@ -1,0 +1,8 @@
+build
+*.a
+*.o
+*.gch
+.vscode
+external/PicoSHA2/*
+index/
+csv-parser/
