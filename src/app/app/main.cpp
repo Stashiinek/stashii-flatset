@@ -2,15 +2,20 @@
 #include <librgr/vector.hpp>
 
 int main(int argc, char **argv) {
-  kwangya::miauVector<int> prim (1);
+  stashii::mvec<int> prim (1);
   prim.push_back(4);
   //prim.at(0) = 5;
   //prim[0] = 6;
-  //prim.push_back(8);
-  //prim.push_back(516);
-  //prim.pop_back();
-  for (int i = 0; i < prim.get_size(); i++){
-    std::cout << prim[i] << " ";
+  prim.push_back(8);
+  prim.push_back(516);
+  prim.del_num(0);
+
+  stashii::mvec<int> new_vec;
+  new_vec = prim;
+  std::cout << new_vec.get_capacity() << "  " << new_vec.get_size() << "\n";
+  std::cout << prim.get_capacity() << "  " << prim.get_size() << "\n";
+  for (int i = 0; i < new_vec.get_size(); i++){
+    std::cout << new_vec[i] << " ";
   }
   std::cout << "\n";
   return 0;
