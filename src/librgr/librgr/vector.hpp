@@ -92,7 +92,7 @@ namespace stashii{
             }
         }
 
-        bool exist(T f) noexcept{
+        bool exist(const T& f) noexcept{
             for (size_t i = 0; i < size; i++){
                 if (data[i] == f)
                     return true;
@@ -100,7 +100,7 @@ namespace stashii{
             return false;
         }
 
-        T& find (T f) noexcept{
+        T& find (const T& f) noexcept{
             for (size_t i = 0; i < size; i++){
                 if (data[i] == f)
                     return data[i];
@@ -127,7 +127,7 @@ namespace stashii{
         }
 
         T* operator->() const{
-            return *this;
+            return this;
         }
 
         bool operator==(const mvec& r) noexcept{
@@ -163,6 +163,10 @@ namespace stashii{
 
         const size_t& get_size() noexcept{
             return size;
+        }
+
+        const size_t& get_maxsize() noexcept{
+            return max_size;
         }
 
         const size_t& get_capacity() noexcept{
