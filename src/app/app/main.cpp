@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < new_vec.get_size(); i++){
     std::cout << new_vec[i] << " ";
   }
-  std::cout << "\n";
+  prim.clear();
+  std::cout << "    " << new_vec.find(7) << "\n";
   return 0;
 }
