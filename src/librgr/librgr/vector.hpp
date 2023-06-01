@@ -59,12 +59,15 @@ namespace stashii{
         }
 
         void push_back(const T& value){
-            if (size + 1 == capacity){
-                capacity += 5;
-                std::copy(data, data + capacity, data);
-            }
-            data[size] = value;
-            size++;
+            if (size + 1 != MAGIC_NUM)
+                if (size + 1 == capacity){
+                    if (capacity + 5 > MAGIC_NUM)
+                        capacity = MAGIC_NUM;
+                    else capacity += 5;
+                    std::copy(data, data + capacity, data);
+                }
+                data[size] = value;
+                size++;
         }
 
         void del_num(size_t index){
@@ -126,7 +129,7 @@ namespace stashii{
             return data[pos];
         }
 
-        T* operator->() const{
+        T* operator->() noexcept{
             return this;
         }
 
