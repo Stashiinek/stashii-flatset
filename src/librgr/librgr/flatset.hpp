@@ -49,24 +49,32 @@ namespace stashii{
             return Compare()(r, l);
         }
 
-        T& lower_bound(T key) noexcept{
+        T lower_bound(T key) noexcept{
+            if (setdata.get_size() < 1)
+                return setdata[0];
             if (setdata.get_size() < 2)
                 return (Compare()(setdata[0], setdata[1])) ? setdata[0] : setdata[1];
             
-            for (size_t i = 0; i < setdata.get_size(); i++){
-                if (!Compare()(key, setdata[i])){
+            for (size_t i = 0; i < setdata.get_size() - 1; i++){
+                if (Compare()(key, setdata[i])){
+                    if ((setdata[setdata.get_size() - 1] > setdata[0])&&(i > 0))
+                        return setdata[i - 1];
                     return setdata[i];
                 }
             }
             return setdata[setdata.get_size()];
         }
 
-        T& upper_bound(T key) noexcept{
+        T upper_bound(T key) noexcept{
+            if (setdata.get_size() < 1)
+                return setdata[0];
             if (setdata.get_size() < 2)
                 return (Compare()(setdata[1], setdata[0])) ? setdata[0] : setdata[1];
 
-            for (size_t i = setdata.get_size(); i > 0; i++){
-                if (Compare()(key, setdata[i])){
+            for (size_t i = setdata.get_size() - 1; i > 0; i--){
+                if (Compare()(setdata[i], key)){
+                    if ((setdata[setdata.get_size() - 1] > setdata[0])&&(setdata.get_size() - 1 > i))
+                        return setdata[i + 1];
                     return setdata[i];
                 }
             }
@@ -110,21 +118,19 @@ namespace stashii{
         void insert(const T& other){
             if (exist(other) != true){
                 setdata.push_back(other);
-                
                 if (setdata.get_size() > 2){
-                    T& lower = lower_bound(other);
-                    auto i = index(other) - 1;
-                    
-                    if (!Compare()(setdata[i - 1], setdata[setdata.get_size() - 1])){
-                        std::swap(setdata[i - 1], setdata[setdata.get_size() - 1]);
+                    size_t ind = binarysearch(other);
+                    if ((ind < setdata.get_size())){
+                        if (Compare()(setdata[setdata.get_size() - 1], setdata[ind])){
+                            std::swap(setdata[ind], setdata[setdata.get_size() - 1]);
+                            for (size_t i = ind + 1; i < setdata.get_size() - 1; i++){
+                                std::swap(setdata[i], setdata[setdata.get_size() - 1]);
+                            }
+                        }   
                     }
-                    for (size_t k = i; k < setdata.get_size() - 1; k++){
-                        if (!Compare()(setdata[k], setdata[k + 1]))
-                            std::swap(setdata[k], setdata[k + 1]);
-                    }
-                } else {
-                    if ((setdata.get_size() > 1)&&(!Compare()(setdata[0], setdata[1])))
-                    std::swap(setdata[0], setdata[1]);
+                } else if (setdata.get_size() == 2) {
+                    if (Compare()(setdata[1], setdata[0]))
+                        std::swap(setdata[1], setdata[0]);
                 }
             }
         }
@@ -135,19 +141,36 @@ namespace stashii{
 
         void clear(){}
 
-        void contains(T& other){}
-
         //место для операторов сравнения (их надо еще написать в mvec)
 
         private:
         mvec<T> setdata;
 
         void sort() noexcept{        //надо потом заменить на более умный код
-            for (size_t i = 0; i < setdata.get_size(); i++)
-                for (size_t k = 0; k < setdata.get_size(); k++)
-                    if (Compare()(setdata[i], setdata[k])){
-                        std::swap(setdata[i], setdata[k]);
-                    }
+            
+        }
+
+        size_t binarysearch(T key){
+            if (setdata.get_size() == 2){
+                if (Compare()(setdata[0], setdata[1])) return 0;
+                else return 1;
+            } else if (setdata.get_size() < 2){
+                return 0;
+            }
+
+            if (Compare()(key, setdata[0])) return 0;
+
+            size_t l = 0, r  = setdata.get_size() - 2;
+            size_t m = 0;
+
+            while (r - l > 1){
+                m = l + (r - l) / 2;
+                if (!Compare()(setdata[m], key))
+                    r = m;
+                else l = m;
+            }
+            return (Compare()(key - setdata[r], key - setdata[m])) ? r : m;
         }
     };
 }
+

@@ -2,7 +2,7 @@
 #include <librgr/flatset.hpp>
 
 int main(int argc, char **argv) {
-  stashii::flatset<int> miau;
+  stashii::flatset<int, std::greater<>> miau;
   
   miau.insert(4);
   miau.insert(8);
@@ -18,8 +18,6 @@ int main(int argc, char **argv) {
   std::cout << "\n";
 
 
-  //std::cout << miau.diff(4, 3) << "   " << miau.diff(3, 4) << "\n";
-  
-  //stashii::mvec<int> meow;
+  //std::cout << miau.diff(4, 3) << "   " << miau.diff(3, 4) << "\n"
   return 0;
 }
