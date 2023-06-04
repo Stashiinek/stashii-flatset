@@ -3,31 +3,25 @@
 #include <algorithm>
 #include <sys/mman.h>
 
-const size_t MAGIC_NUM = 32768; //2 ^ 15
 
 namespace stashii{
     template<typename T>
     class mvec{
         public:
-        mvec() noexcept: data(new T[1]), size(0), capacity(1){
-            max_size = MAGIC_NUM / sizeof(T);
-        }
+        mvec() noexcept: data(new T[1]), size(0), capacity(1){}
         mvec(const T &def) noexcept: data(new T[1]), size(0), capacity(1){
             data[0] = def;
-            max_size = MAGIC_NUM / sizeof(T);
         }
         
         mvec(const mvec& other): data(new T[other.size]){
             std::copy(other.data, other.data + other.size, data);
             size = other.size;
             capacity = other.capacity;
-            max_size = MAGIC_NUM / sizeof(T);
         }
         mvec(mvec&& other): data(new T[other.size]){
             std::copy(other.data, other.data + other.size, data);
             size = other.size;
             capacity = other.capacity;
-            max_size = MAGIC_NUM / sizeof(T);
 
             other.data = nullptr;
             other.size = 0;
@@ -59,15 +53,12 @@ namespace stashii{
         }
 
         void push_back(const T& value){
-            if (size + 1 != MAGIC_NUM)
-                if (size + 1 == capacity){
-                    if (capacity + 5 > MAGIC_NUM)
-                        capacity = MAGIC_NUM;
-                    else capacity += 5;
-                    std::copy(data, data + capacity, data);
-                }
-                data[size] = value;
-                size++;
+            if (size + 1 == capacity){
+                capacity += 5;
+                std::copy(data, data + capacity, data);
+            }
+            data[size] = value;
+            size++;
         }
 
         void del_num(size_t index){
@@ -85,6 +76,8 @@ namespace stashii{
         }
 
         void pop_back() noexcept{
+            std::swap(data[size], data[size - 1]);
+            data[size].~T();
             size--;
         }
 
@@ -103,20 +96,6 @@ namespace stashii{
             return false;
         }
 
-        T& find (const T& f) noexcept{
-            for (size_t i = 0; i < size; i++){
-                if (data[i] == f)
-                    return data[i];
-            }
-            return data[size];
-        }
-
-        mvec& begin(){ return data[0];}
-        mvec& end(){return data[size - 1];}
-
-        mvec& rbegin(){ return data[size-1]; }
-        mvec& rend(){ return data[0]; }
-
         mvec& at(size_t pos){
             if (pos > size)
                 throw (std::out_of_range("at(): Position cannot been more than size"));
@@ -133,46 +112,43 @@ namespace stashii{
             return this;
         }
 
-        bool operator==(const mvec& r) noexcept{
-            if (this->size != r.size)
+        friend bool operator==(mvec& l, mvec& r) noexcept{
+            if (l.size != r.size)
                 return false;
             
             for (int i = 0; i < r.size; i++){
-                if (this->at(i) != r.at(i))
+                if (l.at(i) != r.at(i))
                     return false;
             }
             return true;
         }
 
-        bool operator!=(const mvec& r) noexcept{
-            return !(this == r);
+        friend bool operator!=(mvec& l, mvec& r) noexcept{
+            if (l.size != r.size) return false;
+            return !(l == r);
         }
 
-        bool operator>(const mvec& r) noexcept{
-            return this->size > r.size;
+        friend bool operator>(mvec& l, mvec& r) noexcept{
+            return l->size > r.size;
         }
 
-        bool operator<(const mvec& r) noexcept{
-            return this->size < r.size;
+        friend bool operator<(mvec& l, mvec& r) noexcept{
+            return l->size < r.size;
         }
 
-        bool operator>=(const mvec& r) noexcept{
-            return !(this < r);
+        friend bool operator>=(mvec& l, mvec& r) noexcept{
+            return !(l < r);
         }
 
-        bool operator<=(const mvec& r) noexcept{
-            return !(this > r);
+        friend bool operator<=(mvec& l, mvec& r) noexcept{
+            return !(l > r);
         }
 
-        const size_t& get_size() noexcept{
+        size_t& get_size() noexcept{
             return size;
         }
 
-        const size_t& get_maxsize() noexcept{
-            return max_size;
-        }
-
-        const size_t& get_capacity() noexcept{
+        size_t& get_capacity() noexcept{
             return capacity;
         }
 
@@ -184,58 +160,72 @@ namespace stashii{
             using reference = T&;
             using iterator_category = std::forward_iterator_tag;
 
-            explicit mvecIterator(std::shared_ptr<mvec<T>> other) : miauptr(other){}
+            explicit mvecIterator(T *other) : miauptr(other){}
+            explicit mvecIterator(mvecIterator &&other) : miauptr(other.miauptr){}
+            explicit mvecIterator(mvecIterator &other) : miauptr(other.miauptr){}
 
-            ~mvecIterator(){ miauptr.reset(); }
+            ~mvecIterator(){}
 
-            // че сюда писать...
-
-            friend bool operator==(const mvec& l, const mvec& r) noexcept{
-                if (l.size != r.size)
-                    return false;
-                
-                for (int i = 0; i < l.size; i++){
-                    if (l.at(i) != r.at(i))
-                        return false;
-                }
-                return true;
+            T& operator*() noexcept{
+                return *miauptr;
             }
 
-            friend bool operator!=(const mvec& l, const mvec& r) noexcept{
-                return !(l == r);
+            T* operator->() noexcept{
+                return miauptr;
             }
 
-            friend bool operator>(const mvec& l, const mvec& r) noexcept{
-                return l.size > r.size;
+            T* operator&() noexcept{
+                return miauptr;
             }
 
-            friend bool operator<(const mvec& l, const mvec& r) noexcept{
-                return l.size < r.size;
+            mvecIterator& operator++(int){
+                (miauptr)++;
+                return *this;
             }
 
-            friend bool operator>=(const mvec& l, const mvec& r) noexcept{
-                return !(l < r);
+            mvecIterator& operator++(){
+                T* tmp = miauptr;
+                ++(tmp);
+                miauptr = tmp;
+                return *this; 
             }
 
-            friend bool operator<=(const mvec& l, const mvec& r) noexcept{
-                return !(l > r);
+            mvecIterator& operator--(int){
+                (miauptr)--;
+                return *this;
             }
 
-            mvec& operator++(){
-                mvec& res = *this;
-                ++(this);
-                return res; 
+            mvecIterator& operator--(){
+                T* tmp = miauptr;
+                --(tmp);
+                miauptr = tmp;
+                return *this; 
             }
 
-            private:
-            std::shared_ptr<mvec<T>> miauptr;
+            protected:
+            T* miauptr;
         };
+
+        mvecIterator begin(){ return mvecIterator(data); }
+        mvecIterator last(){
+            size_t cat = size - 1;
+            return mvecIterator(data + cat); }  //что то не так со сдвигом
+        mvecIterator end(){
+            size_t cat = size - 1;
+            return mvecIterator(data + size); }
+
+        mvecIterator find (const T& f) noexcept{
+            for (size_t i = 0; i < size; i++){
+                if (data[i] == f)
+                    return mvecIterator(data + i);
+            }
+            return mvecIterator(data + size);
+        }
 
         private:
         T* data;
 
         size_t size;
         size_t capacity;
-        size_t max_size;
     };
 }
