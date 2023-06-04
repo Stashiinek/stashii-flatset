@@ -54,7 +54,7 @@ namespace stashii{
 
         void push_back(const T& value){
             if (size + 1 == capacity){
-                capacity += 5;
+                capacity += 4;
                 std::copy(data, data + capacity, data);
             }
             data[size] = value;
@@ -152,7 +152,7 @@ namespace stashii{
             return capacity;
         }
 
-        class mvecIterator{
+        /*class mvecIterator{
             public:
             using difference_type = std::ptrdiff_t;
             using value_type = T;
@@ -185,8 +185,7 @@ namespace stashii{
 
             mvecIterator& operator++(){
                 T* tmp = miauptr;
-                ++(tmp);
-                miauptr = tmp;
+                ++(*this);
                 return *this; 
             }
 
@@ -197,29 +196,28 @@ namespace stashii{
 
             mvecIterator& operator--(){
                 T* tmp = miauptr;
-                --(tmp);
-                miauptr = tmp;
+                --(*this);
                 return *this; 
             }
 
             protected:
             T* miauptr;
-        };
+        };*/
 
-        mvecIterator begin(){ return mvecIterator(data); }
-        mvecIterator last(){
+        T* begin(){ return data; }
+        T* last(){
             size_t cat = size - 1;
-            return mvecIterator(data + cat); }  //что то не так со сдвигом
-        mvecIterator end(){
+            return data + cat; } 
+        T* end(){
             size_t cat = size - 1;
-            return mvecIterator(data + size); }
+            return data + size; }
 
-        mvecIterator find (const T& f) noexcept{
+        T* find (const T& f) noexcept{
             for (size_t i = 0; i < size; i++){
                 if (data[i] == f)
-                    return mvecIterator(data + i);
+                    return data + i;
             }
-            return mvecIterator(data + size);
+            return data + size;
         }
 
         private:

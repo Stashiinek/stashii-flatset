@@ -17,7 +17,9 @@ namespace stashii{
         }
 
         flatset(mvec<T> &other)noexcept{
-            setdata = other;
+            for (size_t i = 0; i < other.get_size(); i++){
+                setdata.push_back(other[i]);
+            }
             sort();
         }
 
@@ -30,6 +32,14 @@ namespace stashii{
             setdata = other.setdata;
             sort();
             other.clear();
+        }
+
+        flatset& operator=(mvec<T> &other) noexcept{
+            for (size_t i = 0; i < other.get_size(); i++){
+                if (!exist(other[i]))
+                    setdata.push_back(other[i]);
+            }
+            sort();
         }
 
         T& at(size_t pos){
@@ -136,6 +146,18 @@ namespace stashii{
             setdata.clear();
         }
 
+        void remove(const T& el){
+            size_t ind = index(el);
+            if (ind == setdata.get_size()){
+                std::cout << "Note: deleted element does not exist\n";
+                return;
+            }
+            setdata.del_num(ind);
+            for (size_t i = ind; i < setdata.get_size() - 1; i++){
+                std::swap(setdata[i], setdata[i + 1]);
+            }
+        }
+
         void sort() noexcept{
             for (size_t i = 0; i < setdata.get_size(); i++){
                 for (size_t k = 0; k < setdata.get_size(); k++){
@@ -143,6 +165,28 @@ namespace stashii{
                     std::swap(setdata[i], setdata[k]);
                 }
             }
+        }
+
+        size_t binarysearch(T key){
+            if (setdata.get_size() == 2){
+                if (Compare()(setdata[0], setdata[1])) return 0;
+                else return 1;
+            } else if (setdata.get_size() < 2){
+                return 0;
+            }
+
+            if (Compare()(key, setdata[0])) return 0;
+
+            size_t l = 0, r  = setdata.get_size() - 2;
+            size_t m = 0;
+
+            while (r - l > 1){
+                m = l + (r - l) / 2;
+                if (!Compare()(setdata[m], key))
+                    r = m;
+                else l = m;
+            }
+            return (Compare()(key - setdata[r], key - setdata[m])) ? r : m;
         }
 
         friend bool operator==(flatset &l, flatset& r) noexcept{
@@ -159,23 +203,7 @@ namespace stashii{
             return !(l == r);
         }
 
-        friend bool operator>(flatset &l, flatset &r) noexcept{
-            return l.size() > r.size();
-        }
-
-        friend bool operator<(flatset &l, flatset &r) noexcept{
-            return l.size() < r.size();
-        }
-
-        friend bool operator>=(flatset &l, flatset &r) noexcept{
-            return l.size() >= r.size();
-        }
-
-        friend bool operator<=(flatset &l, flatset &r) noexcept{
-            return l.size() <= r.size();
-        }
-
-        class flatIterator : public mvec<T>::mvecIterator{
+        class flatIterator{
             public:
             using difference_type = std::ptrdiff_t;
             using value_type = T;
@@ -183,48 +211,90 @@ namespace stashii{
             using reference = T&;
             using iterator_category = std::forward_iterator_tag;
 
-            flatIterator(flatIterator &other): mvec<T>::mvecIterator(other.miauptr.get()){}
-            flatIterator(flatIterator &&other): mvec<T>::mvecIterator(other.miauptr.get()){}
+            //flatIterator(flatIterator &other): mvec<T>::mvecIterator(other.miauptr.get()){}
+            //flatIterator(flatIterator &&other): mvec<T>::mvecIterator(other.miauptr.get()){}
 
-            flatIterator(T* other) : mvec<T>::mvecIterator(other){}
+            //flatIterator(T* other) : mvec<T>::mvecIterator(other){}
+
+            explicit flatIterator(T *other) : miauptr(other){}
+            explicit flatIterator(flatIterator &&other) : miauptr(other.miauptr){}
+            explicit flatIterator(flatIterator &other) : miauptr(other.miauptr){}
 
             ~flatIterator(){}
 
-            friend bool operator==(flatIterator& l, flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
-            friend bool operator==(flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr == r.miauptr; }
-            friend bool operator==(flatIterator&& l, flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
+            T& operator*() noexcept{
+                return *miauptr;
+            }
+
+            T* operator->() noexcept{
+                return miauptr;
+            }
+
+            T* operator&() noexcept{
+                return miauptr;
+            }
+
+            flatIterator& operator++(int){
+                (miauptr)++;
+                return *this;
+            }
+
+            flatIterator& operator++(){
+                T* tmp = miauptr;
+                ++(*this);
+                return *this; 
+            }
+
+            flatIterator& operator--(int){
+                (miauptr)--;
+                return *this;
+            }
+
+            flatIterator& operator--(){
+                T* tmp = miauptr;
+                --(*this);
+                return *this; 
+            }
+
+            friend bool operator==(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
+            friend bool operator==(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr == r.miauptr; }
+            friend bool operator==(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
             friend bool operator==(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr == r.miauptr; }
 
-            friend bool operator!=(flatIterator& l, flatIterator& r) noexcept{ return !(l == r); }
-            friend bool operator!=(flatIterator& l, flatIterator&& r) noexcept{ return !(l == r); }
-            friend bool operator!=(flatIterator&& l, flatIterator& r) noexcept{ return !(l == r); }
+            friend bool operator!=(const flatIterator& l, const  flatIterator& r) noexcept{ return !(l == r); }
+            friend bool operator!=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l == r); }
+            friend bool operator!=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l == r); }
             friend bool operator!=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l == r); }
 
-            friend bool operator>(flatIterator& l, flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
-            friend bool operator>(flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr > r.miauptr; }
-            friend bool operator>(flatIterator&& l, flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
+            friend bool operator>(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
+            friend bool operator>(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr > r.miauptr; }
+            friend bool operator>(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
             friend bool operator>(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr > r.miauptr; }
 
-            friend bool operator<(flatIterator& l, flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
-            friend bool operator<(flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr < r.miauptr; }
-            friend bool operator<(flatIterator&& l, flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
+            friend bool operator<(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
+            friend bool operator<(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr < r.miauptr; }
+            friend bool operator<(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
             friend bool operator<(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr < r.miauptr; }
 
-            friend bool operator>=(flatIterator& l, flatIterator& r) noexcept{ return !(l < r); }
-            friend bool operator>=(flatIterator& l, flatIterator&& r) noexcept{ return !(l < r); }
-            friend bool operator>=(flatIterator&& l, flatIterator& r) noexcept{ return !(l < r); }
+            friend bool operator>=(const flatIterator& l, const flatIterator& r) noexcept{ return !(l < r); }
+            friend bool operator>=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l < r); }
+            friend bool operator>=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l < r); }
             friend bool operator>=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l < r); }
 
-            friend bool operator<=(flatIterator& l, flatIterator& r) noexcept{ return !(l > r); }
-            friend bool operator<=(flatIterator& l, flatIterator&& r) noexcept{ return !(l > r); }
-            friend bool operator<=(flatIterator&& l, flatIterator& r) noexcept{ return !(l > r); }
+            friend bool operator<=(const flatIterator& l, const flatIterator& r) noexcept{ return !(l > r); }
+            friend bool operator<=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l > r); }
+            friend bool operator<=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l > r); }
             friend bool operator<=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l > r); }
+
+            private:
+            T* miauptr;
         };
 
-        flatIterator begin(){ return flatIterator(&setdata.begin()); }
-        flatIterator end(){return flatIterator(&setdata.end()); }
-        flatIterator last(){return flatIterator(&setdata.last());}
-        flatIterator find(T &key) noexcept{ return flatIterator(&setdata.find(key)); }
+        flatIterator begin(){ return flatIterator(setdata.begin()); }
+        flatIterator end(){return flatIterator(setdata.end()); }
+        flatIterator last(){return flatIterator(setdata.last());}
+        flatIterator find(const T &key) noexcept{ return flatIterator(setdata.find(key)); }
+        flatIterator find(T &&key) noexcept{ return flatIterator(setdata.find(key)); }
 
         protected:
         mvec<T> setdata;

@@ -2,23 +2,22 @@
 #include <librgr/flatset.hpp>
 
 int main(int argc, char **argv) {
-  stashii::mvec<int> meow;
-  meow.push_back(4);
-  meow.push_back(8);
-  meow.push_back(2);
-  meow.push_back(7);
-  meow.push_back(6);
-  meow.push_back(12);
-  stashii::flatset<int> miau (meow);
-  auto b = miau.begin();
+  stashii::flatset<int> miau;
+  miau.insert(7);
+  miau.insert(6);
+  miau.insert(4);
+  //std::cout << "meowing...\n";
+  miau.remove(6);
+  miau.insert(5);
+  //miau.remove(4);
   stashii::flatset<int>::flatIterator miauiterator (miau.last());
-  std::cout << miau[0] << "\n";
   stashii::flatset<int>::flatIterator miauend (miau.begin());
 
-  for (; miauiterator >= miauend; --miauiterator){
+  for (; miauiterator >= miauend; miauiterator--){
     std::cout << *miauiterator << "   ";
   }
-  std::cout << "\n" << miau.lower_bound(1) << " " << miau.upper_bound(1);
+  std::cout << "\n" << miau.lower_bound(1) << " " << miau.upper_bound(1) << "\n";
+  std::cout << "Find 5: " << miau.exist(5) << ", find 6: " << miau.exist(6) << "\n";
   std::cout << "\n";
   std::cout << *miau.find(5) << "\n";
   miau.clear();
