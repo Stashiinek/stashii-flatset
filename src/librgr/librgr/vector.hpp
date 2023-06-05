@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <sys/mman.h>
 
-
 namespace stashii{
     template<typename T>
     class mvec{

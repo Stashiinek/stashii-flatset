@@ -18,6 +18,9 @@ int main(int argc, char **argv) {
   miau.remove(3);
 
   stashii::flatset<int>::flatIterator miauiterator (miau.last());
+  miau.insert(10);
+  //miau.clear();
+  miauiterator++;
   stashii::flatset<int>::flatIterator miauend (miau.begin());
 
   for (; miauiterator >= miauend; --miauiterator){

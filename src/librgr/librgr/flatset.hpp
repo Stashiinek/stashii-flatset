@@ -162,15 +162,6 @@ namespace stashii{
             }
         }
 
-        void sort() noexcept{
-            for (size_t i = 0; i < setdata.get_size(); i++){
-                for (size_t k = 0; k < setdata.get_size(); k++){
-                    if (Compare()(setdata[i], setdata[k]))
-                    std::swap(setdata[i], setdata[k]);
-                }
-            }
-        }
-
         friend bool operator==(flatset &l, flatset& r) noexcept{
             if (l.size() != r.size())
                 return false;
@@ -196,6 +187,11 @@ namespace stashii{
             explicit flatIterator(T *other) : miauptr(other){}
             explicit flatIterator(flatIterator &&other) : miauptr(other.miauptr){}
             explicit flatIterator(flatIterator &other) : miauptr(other.miauptr){}
+
+            flatIterator operator=(flatIterator &other){
+                miauptr = other.miauptr;
+                return *this;
+            }
 
             ~flatIterator(){}
 
@@ -254,6 +250,15 @@ namespace stashii{
 
         protected:
         mvec<T> setdata;
+
+        void sort() noexcept{
+            for (size_t i = 0; i < setdata.get_size(); i++){
+                for (size_t k = 0; k < setdata.get_size(); k++){
+                    if (Compare()(setdata[i], setdata[k]))
+                    std::swap(setdata[i], setdata[k]);
+                }
+            }
+        }
 
         size_t binarysearch(T key){
             if (setdata.get_size() == 2){
