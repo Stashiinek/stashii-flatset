@@ -21,7 +21,7 @@ TEST(fltst, operators2){
   flatset<int> set = {2, 5, 1, 7, 6, 3, 2};
 
   EXPECT_EQ(set[0], 1);
-  EXPECT_EQ(set.at(3), 5);
+  EXPECT_EQ(set[3], 5);
 }
 
 TEST(fltst, ex1st){

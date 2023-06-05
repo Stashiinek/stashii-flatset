@@ -247,6 +247,7 @@ namespace stashii{
         flatIterator last(){return flatIterator(setdata.last());}
         flatIterator find(const T &key) noexcept{ return flatIterator(setdata.find(key)); }
         flatIterator find(T &&key) noexcept{ return flatIterator(setdata.find(key)); }
+        flatIterator at(const T &key) noexcept{ return flatIterator(setdata[key]); }
 
         protected:
         mvec<T> setdata;
