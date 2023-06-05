@@ -9,7 +9,7 @@ namespace stashii{
     class mvec{
         public:
         mvec() noexcept: data(new T[1]), size(0), capacity(1){}
-        mvec(const T &def) noexcept: data(new T[1]), size(0), capacity(1){
+        mvec(const T &def) noexcept: data(new T[2]), size(1), capacity(2){
             data[0] = def;
         }
         
@@ -28,7 +28,14 @@ namespace stashii{
             other.capacity = 1;
         }
 
+        mvec(std::initializer_list<T> list){
+            for (auto m : list){
+                push_back(m);
+            }
+        }
+
         mvec& operator=(const mvec& other) noexcept{
+            clear();
             std::copy(other.data, other.data + other.size, data);
             size = other.size;
             capacity = other.capacity;
@@ -37,6 +44,7 @@ namespace stashii{
         }
 
         mvec& operator=(mvec&& other) noexcept{
+            clear();
             std::copy(other.data, other.data + other.size, data);
             size = other.size;
             capacity = other.capacity;
@@ -54,7 +62,7 @@ namespace stashii{
 
         void push_back(const T& value){
             if (size + 1 == capacity){
-                capacity += 4;
+                capacity *= 2;
                 std::copy(data, data + capacity, data);
             }
             data[size] = value;
@@ -79,6 +87,7 @@ namespace stashii{
             std::swap(data[size], data[size - 1]);
             data[size].~T();
             size--;
+            capacity;
         }
 
         void resize(size_t new_size) noexcept{
@@ -96,7 +105,7 @@ namespace stashii{
             return false;
         }
 
-        mvec& at(size_t pos){
+        T& at(size_t pos){
             if (pos > size)
                 throw (std::out_of_range("at(): Position cannot been more than size"));
             return data[pos];
@@ -144,65 +153,13 @@ namespace stashii{
             return !(l > r);
         }
 
-        size_t& get_size() noexcept{
+        const size_t& get_size() noexcept{
             return size;
         }
 
-        size_t& get_capacity() noexcept{
+        const size_t& get_capacity() noexcept{
             return capacity;
         }
-
-        /*class mvecIterator{
-            public:
-            using difference_type = std::ptrdiff_t;
-            using value_type = T;
-            using pointer = T*;
-            using reference = T&;
-            using iterator_category = std::forward_iterator_tag;
-
-            explicit mvecIterator(T *other) : miauptr(other){}
-            explicit mvecIterator(mvecIterator &&other) : miauptr(other.miauptr){}
-            explicit mvecIterator(mvecIterator &other) : miauptr(other.miauptr){}
-
-            ~mvecIterator(){}
-
-            T& operator*() noexcept{
-                return *miauptr;
-            }
-
-            T* operator->() noexcept{
-                return miauptr;
-            }
-
-            T* operator&() noexcept{
-                return miauptr;
-            }
-
-            mvecIterator& operator++(int){
-                (miauptr)++;
-                return *this;
-            }
-
-            mvecIterator& operator++(){
-                T* tmp = miauptr;
-                ++(*this);
-                return *this; 
-            }
-
-            mvecIterator& operator--(int){
-                (miauptr)--;
-                return *this;
-            }
-
-            mvecIterator& operator--(){
-                T* tmp = miauptr;
-                --(*this);
-                return *this; 
-            }
-
-            protected:
-            T* miauptr;
-        };*/
 
         T* begin(){ return data; }
         T* last(){

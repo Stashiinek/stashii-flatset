@@ -18,28 +18,42 @@ namespace stashii{
 
         flatset(mvec<T> &other)noexcept{
             for (size_t i = 0; i < other.get_size(); i++){
-                setdata.push_back(other[i]);
+                if (!exist(other[i]))
+                    setdata.push_back(other[i]);
             }
             sort();
         }
 
+        flatset(std::initializer_list<T> list) noexcept {
+            for (auto m : list){
+                if (!exist(m))
+                insert(m);
+            }
+        }
+
         const flatset& operator=(const flatset& other) noexcept{
+            clear();
             setdata = other.setdata;
             sort();
+            return *this;
         }
 
         flatset& operator=(flatset&& other) noexcept{
+            clear();
             setdata = other.setdata;
             sort();
             other.clear();
+            return *this;
         }
 
         flatset& operator=(mvec<T> &other) noexcept{
+            clear();
             for (size_t i = 0; i < other.get_size(); i++){
                 if (!exist(other[i]))
                     setdata.push_back(other[i]);
             }
             sort();
+            return *this;
         }
 
         T& at(size_t pos){
@@ -97,15 +111,11 @@ namespace stashii{
         }
 
         bool empty() noexcept{
-            return (size == 1) ? true : false;
+            return (setdata.get_size() == 0) ? true : false;
         }
 
-        bool full() noexcept{
-            return (setdata.get_capacity() == setdata.get_maxsize()) ? true : false;
-        }
-
-        size_t size() noexcept{ return setdata.get_size(); }
-        size_t capacity() noexcept{ return setdata.get_capacity(); }
+        const size_t size() noexcept{ return setdata.get_size(); }
+        const size_t capacity() noexcept{ return setdata.get_capacity(); }
 
         void insert(const T& other){
             if (exist(other) != true){
@@ -123,23 +133,17 @@ namespace stashii{
                 }
             }
         }
+
         void insert(const mvec<T>& other){
             for (size_t k = 0; k < other.get_size(); k++){
-                if (exist(other[k]) != true){
+                if (!exist(other[k]))
                     setdata.push_back(other[k]);
-                    if (setdata.get_size() > 2){
-                        size_t ind = binarysearch(other[k]);
-                        if ((ind < setdata.get_size())&&(Compare()(setdata[setdata.get_size() - 1], setdata[ind]))){
-                            for (size_t i = ind; i < setdata.get_size() - 1; i++){
-                                std::swap(setdata[i], setdata[setdata.get_size() - 1]);
-                            }  
-                        }
-                    } else if (setdata.get_size() == 2) {
-                        if (Compare()(setdata[1], setdata[0]))
-                            std::swap(setdata[1], setdata[0]);
-                    }
-                }
             }
+            if (setdata.get_size() == 2) {
+                if (Compare()(setdata[1], setdata[0]))
+                    std::swap(setdata[1], setdata[0]);
+            } else if (setdata.get_size() > 2)
+                sort();
         }
 
         void clear(){
@@ -149,7 +153,7 @@ namespace stashii{
         void remove(const T& el){
             size_t ind = index(el);
             if (ind == setdata.get_size()){
-                std::cout << "Note: deleted element does not exist\n";
+                std::cout << "Note: deleted element '" << el <<"' does not exist\n";
                 return;
             }
             setdata.del_num(ind);
@@ -165,28 +169,6 @@ namespace stashii{
                     std::swap(setdata[i], setdata[k]);
                 }
             }
-        }
-
-        size_t binarysearch(T key){
-            if (setdata.get_size() == 2){
-                if (Compare()(setdata[0], setdata[1])) return 0;
-                else return 1;
-            } else if (setdata.get_size() < 2){
-                return 0;
-            }
-
-            if (Compare()(key, setdata[0])) return 0;
-
-            size_t l = 0, r  = setdata.get_size() - 2;
-            size_t m = 0;
-
-            while (r - l > 1){
-                m = l + (r - l) / 2;
-                if (!Compare()(setdata[m], key))
-                    r = m;
-                else l = m;
-            }
-            return (Compare()(key - setdata[r], key - setdata[m])) ? r : m;
         }
 
         friend bool operator==(flatset &l, flatset& r) noexcept{
@@ -209,12 +191,7 @@ namespace stashii{
             using value_type = T;
             using pointer = T*;
             using reference = T&;
-            using iterator_category = std::forward_iterator_tag;
-
-            //flatIterator(flatIterator &other): mvec<T>::mvecIterator(other.miauptr.get()){}
-            //flatIterator(flatIterator &&other): mvec<T>::mvecIterator(other.miauptr.get()){}
-
-            //flatIterator(T* other) : mvec<T>::mvecIterator(other){}
+            using iterator_category = std::bidirectional_iterator_tag;
 
             explicit flatIterator(T *other) : miauptr(other){}
             explicit flatIterator(flatIterator &&other) : miauptr(other.miauptr){}
@@ -234,57 +211,36 @@ namespace stashii{
                 return miauptr;
             }
 
-            flatIterator& operator++(int){
-                (miauptr)++;
-                return *this;
-            }
-
             flatIterator& operator++(){
-                T* tmp = miauptr;
-                ++(*this);
-                return *this; 
+                ++(miauptr);
+                return *this;
             }
 
-            flatIterator& operator--(int){
-                (miauptr)--;
-                return *this;
+            flatIterator& operator++(int){
+                auto tmp = this;
+                ++(miauptr);
+                return *tmp; 
             }
 
             flatIterator& operator--(){
-                T* tmp = miauptr;
-                --(*this);
-                return *this; 
+                --(miauptr);
+                return *this;
+            }
+
+            flatIterator& operator--(int){
+                auto tmp = this;
+                --(miauptr);
+                return *tmp; 
             }
 
             friend bool operator==(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
-            friend bool operator==(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr == r.miauptr; }
-            friend bool operator==(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr == r.miauptr; }
-            friend bool operator==(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr == r.miauptr; }
-
             friend bool operator!=(const flatIterator& l, const  flatIterator& r) noexcept{ return !(l == r); }
-            friend bool operator!=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l == r); }
-            friend bool operator!=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l == r); }
-            friend bool operator!=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l == r); }
 
             friend bool operator>(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
-            friend bool operator>(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr > r.miauptr; }
-            friend bool operator>(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr > r.miauptr; }
-            friend bool operator>(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr > r.miauptr; }
-
             friend bool operator<(const flatIterator& l, const flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
-            friend bool operator<(const flatIterator& l, flatIterator&& r) noexcept{ return l.miauptr < r.miauptr; }
-            friend bool operator<(flatIterator&& l, const flatIterator& r) noexcept{ return l.miauptr < r.miauptr; }
-            friend bool operator<(flatIterator&& l, flatIterator&& r) noexcept{ return l.miauptr < r.miauptr; }
 
             friend bool operator>=(const flatIterator& l, const flatIterator& r) noexcept{ return !(l < r); }
-            friend bool operator>=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l < r); }
-            friend bool operator>=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l < r); }
-            friend bool operator>=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l < r); }
-
             friend bool operator<=(const flatIterator& l, const flatIterator& r) noexcept{ return !(l > r); }
-            friend bool operator<=(const flatIterator& l, flatIterator&& r) noexcept{ return !(l > r); }
-            friend bool operator<=(flatIterator&& l, const flatIterator& r) noexcept{ return !(l > r); }
-            friend bool operator<=(flatIterator&& l, flatIterator&& r) noexcept{ return !(l > r); }
 
             private:
             T* miauptr;
@@ -298,5 +254,27 @@ namespace stashii{
 
         protected:
         mvec<T> setdata;
+
+        size_t binarysearch(T key){
+            if (setdata.get_size() == 2){
+                if (Compare()(setdata[0], setdata[1])) return 0;
+                else return 1;
+            } else if (setdata.get_size() < 2){
+                return 0;
+            }
+
+            if (Compare()(key, setdata[0])) return 0;
+
+            size_t l = 0, r  = setdata.get_size() - 2;
+            size_t m = 0;
+
+            while (r - l > 1){
+                m = l + (r - l) / 2;
+                if (!Compare()(setdata[m], key))
+                    r = m;
+                else l = m;
+            }
+            return (setdata[r] >= setdata[m]) ? r : m;
+        }
     };
 }
