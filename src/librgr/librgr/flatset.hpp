@@ -56,10 +56,6 @@ namespace stashii{
             return *this;
         }
 
-        T& at(size_t pos){
-            return setdata.at(pos);
-        }
-
         T& operator[](size_t pos){
             return setdata[pos];
         }
