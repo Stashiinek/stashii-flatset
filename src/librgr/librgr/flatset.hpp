@@ -203,7 +203,7 @@ namespace stashii{
                 return miauptr;
             }
 
-            flatIterator& operator++(){
+            flatIterator& operator++(){     //префиксный
                 ++(miauptr);
                 return *this;
             }

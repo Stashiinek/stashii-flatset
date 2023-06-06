@@ -2,6 +2,7 @@ build
 *.a
 *.o
 *.gch
+*.odt
 .vscode
 external/PicoSHA2/*
 index/
